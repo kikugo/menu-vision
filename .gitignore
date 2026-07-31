@@ -39,6 +39,9 @@ env/
 ENV/
 .venv/
 
+# Disk cache for generated images (runtime cache, not the committed sample menu)
+.menu_vision_cache/
+
 # Streamlit
 .streamlit/
 

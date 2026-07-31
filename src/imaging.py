@@ -1,8 +1,31 @@
+import hashlib
 import os
+from pathlib import Path
 from google import genai
 from google.genai import types
 from typing import Optional, Dict, Any, Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# Imagen 4 Fast allows 70 images per day on this tier, so regenerating a dish
+# that was already drawn is the most expensive mistake this file can make.
+CACHE_DIR = Path('.menu_vision_cache')
+
+
+def cache_key(prompt: str, style: str = "") -> str:
+    """Stable id for a prompt/style pair. Style is part of the key because the
+    same dish rendered in a different restaurant style is a different image."""
+    return hashlib.sha256(f'{prompt}||{style}'.encode('utf-8')).hexdigest()
+
+
+def cached_image(key: str) -> Optional[bytes]:
+    path = Path(CACHE_DIR) / f'{key}.png'
+    return path.read_bytes() if path.exists() else None
+
+
+def store_image(key: str, data: bytes) -> None:
+    directory = Path(CACHE_DIR)
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / f'{key}.png').write_bytes(data)
 
 
 def _get_client():
@@ -25,8 +48,6 @@ def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Opt
         Dictionary with menu item data plus 'image_bytes' field, or None if generation fails
     """
     try:
-        client = _get_client()
-
         # Extract the prompt from the menu item
         prompt = str(menu_item.get('prompt', ''))
         if not prompt:
@@ -36,6 +57,16 @@ def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Opt
         # Append restaurant style for visual consistency across all generated images
         if restaurant_style:
             prompt = f"{prompt} Shot in the style of: {restaurant_style}."
+
+        key = cache_key(prompt, restaurant_style)
+        cached = cached_image(key)
+        if cached is not None:
+            print(f"💾 Using cached image for: {menu_item.get('name', 'Unknown')}")
+            result = menu_item.copy()
+            result['image_bytes'] = cached
+            return result
+
+        client = _get_client()
 
         print(f"🎨 Generating image for: {menu_item.get('name', 'Unknown')}")
 
@@ -51,6 +82,7 @@ def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Opt
 
         if response.generated_images:
             image_bytes = response.generated_images[0].image.image_bytes
+            store_image(key, image_bytes)
 
             # Return the menu item with image data
             result = menu_item.copy()
