@@ -1,29 +1,30 @@
-# Menu-Vision
+# Menu Vision
 
-Transform any restaurant menu into a visual feast using the power of AI! Upload a menu image or paste text, and watch as AI creates beautiful, realistic photos for each dish.
+Turns a restaurant menu into a set of dish photos. Upload a photo of the menu or paste the text, and it reads each dish, then generates an image for it.
+
+The use case I had in mind is a restaurant that needs images for a delivery listing or a website and does not want to pay for a photo shoot. A menu with 40 dishes takes minutes instead of a day.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-green) ![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red)
 
 ## Features
 
-- **Smart Menu Reading**: Advanced OCR using Google Gemini 2.5 Flash
-- **AI Image Generation**: Beautiful food photos via Google Imagen 4 Fast
-- **Interactive Chatbot**: "Ask the Menu" allows you to query dietary info, recommendations, and pairings directly from the menu text
-- **Nutrition Tracking**: Automatically estimates Calories, Protein, Carbs, and Fat metrics for each dish
-- **Visual Consistency**: Intelligently extracts the restaurant's vibe to generate a cohesive style across all images
-- **Streaming & Concurrency**: Streams OCR text for immediate feedback and generates images in parallel
-- **Dual Input Support**: Upload images or paste text menus
-- **Smart Search**: Filter dishes by name, description, ingredients, or AI-generated tags (e.g., "spicy", "vegetarian")
-- **Responsive UI**: Clean, modern interface with error handling
+- **Menu reading**: Gemini 2.5 Flash does the OCR and extracts each dish's name, description and price
+- **Image generation**: Imagen 4 Fast generates one photo per dish
+- **Style consistency**: Gemini also infers the restaurant's visual style from the menu, and that description gets appended to every image prompt so the set of photos looks like one shoot instead of forty unrelated ones
+- **Concurrent generation**: images generate in parallel with a thread pool, and OCR streams back to the UI as it runs instead of waiting for the full response
+- **Ask the menu**: a chatbot answers questions about dietary info, recommendations, and pairings, using the extracted menu text
+- **Nutrition estimate**: calories, protein, carbs and fat per dish, estimated by the model rather than measured
+- **Two ways in**: upload a menu photo or paste the text directly
+- **Search**: filter dishes by name, description, ingredients, or tag
 
 ## Tech Stack
 
-- **Frontend**: [Streamlit](https://streamlit.io/) — Interactive web interface
-- **OCR & Menu Parsing**: [Google Gemini 2.5 Flash Lite](https://deepmind.google/technologies/gemini/) via `google-genai` SDK
+- **Frontend**: [Streamlit](https://streamlit.io/), a Python web UI framework
+- **OCR & Menu Parsing**: [Google Gemini 2.5 Flash](https://deepmind.google/technologies/gemini/) via `google-genai` SDK
 - **Image Generation**: [Google Imagen 4 Fast](https://deepmind.google/technologies/imagen/) via `google-genai` SDK
 - **Language**: Python 3.8+
 
-> **Note**: This project uses a single API provider (Google) for both OCR and image generation, keeping the architecture simple and the setup minimal — only one API key needed.
+> **Note**: This project uses a single API provider (Google) for both OCR and image generation, so only one API key is needed.
 
 ## Quick Start
 
@@ -52,15 +53,15 @@ GOOGLE_API_KEY="your_gemini_api_key_here"
 streamlit run app.py
 ```
 
-Navigate to `http://localhost:8501` in your browser and start transforming menus!
+Navigate to `http://localhost:8501` in your browser.
 
 ## How It Works
 
 1. **Upload/Input**: Choose to upload a menu image or paste menu text
-2. **Extract**: Gemini AI reads, structures, and generates tags for the menu items
-3. **Generate**: Imagen 4 Fast creates professional food photos for each dish concurrently
-4. **Display**: View your visual menu in a beautiful responsive grid
-5. **Search**: Use the search bar to filter dishes instantly by name, description, ingredients, or tags
+2. **Extract**: Gemini reads the menu, structures each item, and generates tags for it
+3. **Generate**: Imagen 4 Fast generates a photo for each dish, concurrently
+4. **Display**: the menu renders as a responsive grid of dishes and photos
+5. **Search**: the search bar filters dishes by name, description, ingredients, or tags
 
 ### Menu Item Structure
 Each extracted item includes:
@@ -98,9 +99,9 @@ python test_imagen.py
 
 ### Expected Results
 
--   **Gemini Test**: Should show "✅ All Gemini tests passed!"
+-   **Gemini Test**: prints a pass message once all Gemini tests pass.
     -   *Tests*: Basic text generation, menu extraction from text, and menu extraction from an image (if `example.jpeg` or similar is present in examples folder).
--   **Imagen Test**: Should show "✅ All Imagen tests passed!"
+-   **Imagen Test**: prints a pass message once all Imagen tests pass.
     -   *Tests*: API connectivity and generation of several test images. Generated images are saved in the `tests` folder for you to review.
 
 If any tests fail, double-check your API key in the `.env` file and your internet connection.
@@ -192,14 +193,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Future Improvements
 
-We have exciting plans to make Menu-Vision even smarter. Future versions may include:
+Ideas not yet built:
 
-- **Advanced Semantic Search**: Instead of keyword matching, we plan to implement a true semantic search engine. This will allow the application to understand the *meaning* and *context* behind user queries.
-  - **How it will work**: By converting both the menu items and the user's query into vector embeddings, the app will be able to find the closest conceptual matches.
-  - **User benefit**: You could search for "something hearty for a cold day" and get recommendations for soups or rich pasta dishes, or search for "light and healthy" and get salads and grilled fish.
+- **Semantic search**: keyword matching now, but converting menu items and the query into vector embeddings would let a search like "something hearty for a cold day" match soups and rich pasta instead of requiring those exact words.
 
-- **Cuisine Style Detection**: Automatically identify the cuisine type (e.g., Italian, Mexican, Thai) and allow users to filter by it.
+- **Cuisine style detection**: identify the cuisine type (Italian, Mexican, Thai) and let users filter by it.
 
-- **Interactive Menu Analysis**: Provide aggregated insights from the menu, such as the ratio of vegetarian to non-vegetarian dishes or the most common ingredients.
-
-Stay tuned for more updates! 
+- **Menu analysis**: aggregated stats from the menu, such as the ratio of vegetarian to non-vegetarian dishes or the most common ingredients.
