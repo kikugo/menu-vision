@@ -1,20 +1,8 @@
 from src.imaging import cache_key, cached_image, store_image, generate_image
 
 
-def _fake_imagen_response(image_bytes):
-    class _Image:
-        def __init__(self, data):
-            self.image_bytes = data
-
-    class _GeneratedImage:
-        def __init__(self, data):
-            self.image = _Image(data)
-
-    class _Response:
-        def __init__(self, data):
-            self.generated_images = [_GeneratedImage(data)]
-
-    return _Response(image_bytes)
+# _call_image_model returns raw bytes now, so tests no longer need to mimic the
+# nested Imagen response object.
 
 
 def _stub_client(monkeypatch):
@@ -54,9 +42,9 @@ def test_generate_image_retries_then_succeeds(monkeypatch, tmp_path):
         calls["n"] += 1
         if calls["n"] < 3:
             raise RuntimeError("429 RESOURCE_EXHAUSTED")
-        return _fake_imagen_response(b"png")
+        return b"png"
 
-    monkeypatch.setattr("src.imaging._call_imagen", flaky)
+    monkeypatch.setattr("src.imaging._call_image_model", flaky)
     monkeypatch.setattr("src.imaging.RETRY_SLEEP_SECONDS", 0)
 
     result = generate_image({"name": "soup", "prompt": "a bowl of soup"})
@@ -74,7 +62,7 @@ def test_generate_image_gives_up_after_max_attempts(monkeypatch, tmp_path):
         attempts["n"] += 1
         raise RuntimeError("429 RESOURCE_EXHAUSTED")
 
-    monkeypatch.setattr("src.imaging._call_imagen", always_fails)
+    monkeypatch.setattr("src.imaging._call_image_model", always_fails)
     monkeypatch.setattr("src.imaging.RETRY_SLEEP_SECONDS", 0)
 
     assert generate_image({"name": "soup", "prompt": "a bowl of soup"}) is None

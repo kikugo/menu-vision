@@ -3,6 +3,10 @@ import json
 from google import genai
 from google.genai import types
 
+# gemini-2.5-flash returns 404 'no longer available to new users' on keys
+# issued recently, so this pins a currently served model.
+TEXT_MODEL = 'gemini-3.6-flash'
+
 
 CHAT_SYSTEM_INSTRUCTION = """You are a friendly and knowledgeable menu assistant for a restaurant.
 You have been given the full menu as JSON data. Your job is to help customers with questions about
@@ -42,7 +46,7 @@ class MenuChatAgent:
         )
 
         self._chat = self._client.chats.create(
-            model='gemini-2.5-flash',
+            model=TEXT_MODEL,
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt,
                 temperature=0.7,

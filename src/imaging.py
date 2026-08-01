@@ -7,12 +7,17 @@ from google.genai import types
 from typing import Optional, Dict, Any, Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Imagen 4 Fast allows 70 images per day on this tier, so regenerating a dish
-# that was already drawn is the most expensive mistake this file can make.
+# Regenerating a dish that was already drawn is pure waste, and repeat visitors
+# to the demo hit the same sample menu, so cache on disk by prompt hash.
 CACHE_DIR = Path('.menu_vision_cache')
 
+# Nano Banana 2. Imagen 4 Fast was 10 RPM / 70 RPD and is no longer served to
+# newly issued keys; this model allows 100 RPM / 1000 RPD, so the daily ceiling
+# stops being the thing that shapes the whole app.
+IMAGE_MODEL = 'gemini-3.1-flash-image'
+
 MAX_ATTEMPTS = 3
-RETRY_SLEEP_SECONDS = 6  # 10 RPM means one request every six seconds
+RETRY_SLEEP_SECONDS = 2
 
 
 def cache_key(prompt: str, style: str = "") -> str:
@@ -40,22 +45,29 @@ def _get_client():
     return genai.Client(api_key=api_key)
 
 
-def _call_imagen(client, prompt: str):
-    """Isolated so tests can stub the network call and the retry wrapper can
-    catch failures around a single, well-defined boundary."""
-    return client.models.generate_images(
-        model='imagen-4.0-fast-generate-001',
-        prompt=prompt,
-        config=types.GenerateImagesConfig(
-            number_of_images=1,
-            aspect_ratio='1:1',
-        )
-    )
+def _call_image_model(client, prompt: str) -> Optional[bytes]:
+    """Generate one image and return its raw bytes, or None if the model
+    returned no image.
+
+    Isolated so tests can stub the network call and the retry wrapper has a
+    single, well-defined boundary to catch failures around.
+
+    Uses generate_content rather than generate_images: the Imagen models are no
+    longer served to newly issued API keys (they return 404 'no longer available
+    to new users') and the generate_images method itself is deprecated.
+    """
+    response = client.models.generate_content(model=IMAGE_MODEL, contents=prompt)
+    for candidate in response.candidates or []:
+        for part in candidate.content.parts or []:
+            blob = getattr(part, 'inline_data', None)
+            if blob and blob.data:
+                return blob.data
+    return None
 
 
 def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Optional[Dict[str, Any]]:
     """
-    Generates an image for a menu item using Google Imagen 4 Fast.
+    Generates an image for a menu item.
 
     Args:
         menu_item: Dictionary containing menu item data with 'name' and 'prompt'
@@ -87,14 +99,13 @@ def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Opt
 
         print(f"🎨 Generating image for: {menu_item.get('name', 'Unknown')}")
 
-        # A 429 is expected behaviour at this quota, not an error worth
+        # A rate-limit rejection is expected under load, not an error worth
         # crashing over, so retry with backoff before giving up on the dish.
         for attempt in range(1, MAX_ATTEMPTS + 1):
             try:
-                response = _call_imagen(client, prompt)
+                image_bytes = _call_image_model(client, prompt)
 
-                if response.generated_images:
-                    image_bytes = response.generated_images[0].image.image_bytes
+                if image_bytes:
                     store_image(key, image_bytes)
 
                     # Return the menu item with image data
@@ -108,6 +119,11 @@ def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Opt
 
             except Exception as e:
                 print(f"❌ Attempt {attempt}/{MAX_ATTEMPTS} failed for {menu_item.get('name', 'Unknown')}: {e}")
+                # A 404 means the model is gone, not busy. Retrying it just burns
+                # time and prints the same error three times.
+                if '404' in str(e) or 'NOT_FOUND' in str(e):
+                    print(f"❌ Model {IMAGE_MODEL} is unavailable; not retrying.")
+                    return None
                 if attempt < MAX_ATTEMPTS:
                     time.sleep(RETRY_SLEEP_SECONDS * attempt)
 
@@ -141,9 +157,9 @@ def generate_images_for_menu(menu_items: list, restaurant_style: str = "", on_pr
     successful_results = []
     completed = 0
 
-    # 3 workers, not 5: at 10 requests per minute, more concurrency than that
-    # just bursts into 429s instead of finishing any faster.
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    # 6 workers against a 100 requests/minute limit. This was 3 when the app used
+    # Imagen 4 Fast, which allowed only 10 a minute.
+    with ThreadPoolExecutor(max_workers=6) as executor:
         # Submit all tasks, passing restaurant_style to each
         future_to_item = {
             executor.submit(generate_image, item, restaurant_style): item

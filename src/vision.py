@@ -3,6 +3,10 @@ import json
 from google import genai
 from google.genai import types
 
+# gemini-2.5-flash returns 404 'no longer available to new users' on keys
+# issued recently, so this pins a currently served model.
+TEXT_MODEL = 'gemini-3.6-flash'
+
 # Enhanced system prompt to guide the AI model in extracting menu items and generating image prompts
 SYSTEM_PROMPT = """
 You are MenuVision, an expert at reading restaurant menus and creating detailed food imagery prompts.
@@ -83,9 +87,9 @@ def _extract_menu_items(contents):
 
         client = genai.Client(api_key=api_key)
 
-        # Generate response using Gemini 2.5 Flash with structured JSON output
+        # Generate response using Gemini 3.6 Flash with structured JSON output
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model=TEXT_MODEL,
             contents=contents,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json"
@@ -125,7 +129,7 @@ def _extract_menu_items(contents):
 
 def extract_menu_items_from_image(image_data):
     """
-    Extracts menu items from an uploaded image using Google Gemini 2.5 Flash.
+    Extracts menu items from an uploaded image using Google Gemini 3.6 Flash.
 
     Args:
         image_data: PIL Image object or image bytes
@@ -137,7 +141,7 @@ def extract_menu_items_from_image(image_data):
 
 def extract_menu_items_from_text(menu_text):
     """
-    Extracts menu items from plain text using Google Gemini 2.5 Flash.
+    Extracts menu items from plain text using Google Gemini 3.6 Flash.
 
     Args:
         menu_text: String containing the menu text
@@ -181,7 +185,7 @@ def stream_menu_items(contents):
         in_items_array = False
 
         for chunk in client.models.generate_content_stream(
-            model='gemini-2.5-flash',
+            model=TEXT_MODEL,
             contents=contents,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json"
