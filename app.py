@@ -33,8 +33,8 @@ def initialize_ui():
     st.markdown("""
     Turns a restaurant menu into a set of dish photos.
 
-    Upload a photo of the menu or paste the text. Gemini 3.6 Flash reads each dish,
-    then Gemini 3.1 Flash Image generates a photo for it.
+    Upload a photo of the menu or paste the text. Gemini 3.5 Flash Lite reads each dish,
+    then Gemini 3.1 Flash Lite Image generates a photo for it.
     """)
     
     st.divider()

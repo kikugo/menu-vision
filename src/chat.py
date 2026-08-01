@@ -3,9 +3,10 @@ import json
 from google import genai
 from google.genai import types
 
-# gemini-2.5-flash returns 404 'no longer available to new users' on keys
-# issued recently, so this pins a currently served model.
-TEXT_MODEL = 'gemini-3.6-flash'
+# gemini-2.5-flash returns 404 'no longer available to new users' on keys issued
+# recently. This lite model extracts the same 16 dishes from the sample menu as
+# gemini-3.6-flash across three runs, in about a quarter of the time.
+TEXT_MODEL = 'gemini-3.5-flash-lite'
 
 
 CHAT_SYSTEM_INSTRUCTION = """You are a friendly and knowledgeable menu assistant for a restaurant.

@@ -3,9 +3,10 @@ import json
 from google import genai
 from google.genai import types
 
-# gemini-2.5-flash returns 404 'no longer available to new users' on keys
-# issued recently, so this pins a currently served model.
-TEXT_MODEL = 'gemini-3.6-flash'
+# gemini-2.5-flash returns 404 'no longer available to new users' on keys issued
+# recently. This lite model extracts the same 16 dishes from the sample menu as
+# gemini-3.6-flash across three runs, in about a quarter of the time.
+TEXT_MODEL = 'gemini-3.5-flash-lite'
 
 # Enhanced system prompt to guide the AI model in extracting menu items and generating image prompts
 SYSTEM_PROMPT = """
@@ -34,11 +35,11 @@ For the image prompt, create a professional food photography description that in
 - Presentation style (plated, served in bowl, etc.)
 - Lighting (soft, natural, studio lighting)
 - Camera angle (overhead, 45-degree, close-up)
-- Background and styling details
+- Background: plain, uncluttered and softly blurred. Never a dining room, never people.
 - Adjectives that make the food look appetizing
 
 Example image prompt format:
-"Professional food photography of [dish name]. [Description of ingredients and preparation]. Beautifully plated on a white ceramic plate, shot from a 45-degree angle with soft natural lighting. Garnished elegantly, with a clean restaurant background. High-resolution, appetizing, and cinematic presentation."
+"Professional food photography of [dish name]. [Description of ingredients and preparation]. Beautifully plated on a white ceramic plate, shot from a 45-degree angle with soft natural lighting. Garnished elegantly, against a plain softly blurred background with no people and no dining room visible. High-resolution, appetizing, and cinematic presentation."
 
 Return ONLY a valid JSON object in this exact format:
 {

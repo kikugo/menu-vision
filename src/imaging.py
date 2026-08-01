@@ -11,10 +11,20 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # to the demo hit the same sample menu, so cache on disk by prompt hash.
 CACHE_DIR = Path('.menu_vision_cache')
 
-# Nano Banana 2. Imagen 4 Fast was 10 RPM / 70 RPD and is no longer served to
-# newly issued keys; this model allows 100 RPM / 1000 RPD, so the daily ceiling
-# stops being the thing that shapes the whole app.
-IMAGE_MODEL = 'gemini-3.1-flash-image'
+# Nano Banana 2 Lite. Imagen 4 Fast was 10 RPM / 70 RPD and is no longer served
+# to newly issued keys; this allows 150 RPM / 1000 RPD and generates in roughly
+# half the time of the non-lite variant, with no quality difference I could see
+# across an eight dish comparison.
+IMAGE_MODEL = 'gemini-3.1-flash-lite-image'
+
+# The generated per-dish prompt asks for "a clean restaurant background" and the
+# style string describes a venue, so the model helpfully fills the venue with
+# diners. Nobody asked for people in a product shot of a burger.
+FRAMING = (
+    " The dish fills the frame against a plain, softly blurred, empty background. "
+    "Product shot. No people, no diners, no hands, no dining room, nobody in the "
+    "background, not even out of focus."
+)
 
 MAX_ATTEMPTS = 3
 RETRY_SLEEP_SECONDS = 2
@@ -85,7 +95,8 @@ def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Opt
 
         # Append restaurant style for visual consistency across all generated images
         if restaurant_style:
-            prompt = f"{prompt} Shot in the style of: {restaurant_style}."
+            prompt = f"{prompt} Lighting and colour palette in the style of: {restaurant_style}."
+        prompt = f"{prompt}{FRAMING}"
 
         key = cache_key(prompt, restaurant_style)
         cached = cached_image(key)
