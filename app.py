@@ -1,5 +1,6 @@
 import streamlit as st
 import io
+import os
 from collections import Counter
 from PIL import Image
 from dotenv import load_dotenv
@@ -8,6 +9,10 @@ from src.vision import extract_menu_items_from_image, extract_menu_items_from_te
 from src.imaging import generate_images_for_menu, generate_image
 from src.chat import MenuChatAgent
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# Demo deployment guards. Same DEMO_MODE convention as unified-rag.
+DEMO_MODE = os.getenv("DEMO_MODE", "false").strip().lower() in {"1", "true", "yes"}
+MAX_DISHES_PER_SESSION = int(os.getenv("MAX_DISHES_PER_SESSION", "6"))
 
 # Load environment variables from .env file
 load_dotenv()
@@ -24,12 +29,10 @@ def initialize_ui():
     # Header
     st.title("📸 Menu-Vision")
     st.markdown("""
-    **Transform any menu into a visual feast!** 🍽️
-    
-    Upload a menu image or paste menu text, and watch as AI creates beautiful, realistic photos for each dish.
-    
-    • **Powered by**: Gemini 2.5 Flash (OCR) + Imagen 4 Fast (Image Generation)
-    • **Process**: Menu → Extract Items → Generate Food Photos → Visual Menu
+    Turns a restaurant menu into a set of dish photos.
+
+    Upload a photo of the menu or paste the text. Gemini 2.5 Flash reads each dish,
+    then Imagen 4 Fast generates an image for it.
     """)
     
     st.divider()
@@ -264,6 +267,16 @@ def process_menu(menu_items, st_container):
         
         st.success(message)
 
+        # Imagen 4 Fast allows 70 images a day on this tier and one image is one
+        # dish, so a single 40 dish menu would eat most of it. Cap the demo and say
+        # so out loud: silently returning six of forty dishes reads as a bug.
+        if DEMO_MODE and len(menu_items) > MAX_DISHES_PER_SESSION:
+            st.warning(
+                f"Demo limit: generating the first {MAX_DISHES_PER_SESSION} of "
+                f"{len(menu_items)} dishes. Clone the repo to generate a full menu."
+            )
+            menu_items = menu_items[:MAX_DISHES_PER_SESSION]
+
         # 2. Generate images with per-item progress
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -279,7 +292,7 @@ def process_menu(menu_items, st_container):
         status_text.empty()
 
         if visual_menu:
-            st.success("🎉 Visual menu created successfully!")
+            st.success(f"Generated {len(visual_menu)} dish images.")
             return visual_menu
         else:
             st.error("Failed to generate any images. Please check your API keys and try again.")
