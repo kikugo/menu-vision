@@ -4,12 +4,16 @@ Turns a restaurant menu into a set of dish photos. Upload a photo of the menu or
 
 The use case I had in mind is a restaurant that needs images for a delivery listing or a website and does not want to pay for a photo shoot. A menu with 40 dishes takes minutes instead of a day.
 
+Opening the app shows an example menu that was generated earlier and committed to the repo, so looking around costs no API calls. Uploading a menu generates new images. Generated images are cached on disk by prompt, so the same dish is never paid for twice.
+
+A note on models: this used Imagen 4 Fast and Gemini 2.5 Flash until August 2026, when both stopped being served to newly issued API keys and started returning 404. It now uses Gemini 3.1 Flash Image and Gemini 3.6 Flash, which also lifted the image quota from 70 a day to 1000.
+
 ![Python](https://img.shields.io/badge/Python-3.8+-green) ![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red)
 
 ## Features
 
-- **Menu reading**: Gemini 2.5 Flash does the OCR and extracts each dish's name, description and price
-- **Image generation**: Imagen 4 Fast generates one photo per dish
+- **Menu reading**: Gemini 3.6 Flash does the OCR and extracts each dish's name, description and price
+- **Image generation**: Gemini 3.1 Flash Image generates one photo per dish
 - **Style consistency**: Gemini also infers the restaurant's visual style from the menu, and that description gets appended to every image prompt so the set of photos looks like one shoot instead of forty unrelated ones
 - **Concurrent generation**: images generate in parallel with a thread pool, and OCR streams back to the UI as it runs instead of waiting for the full response
 - **Ask the menu**: a chatbot answers questions about dietary info, recommendations, and pairings, using the extracted menu text
@@ -20,8 +24,8 @@ The use case I had in mind is a restaurant that needs images for a delivery list
 ## Tech Stack
 
 - **Frontend**: [Streamlit](https://streamlit.io/), a Python web UI framework
-- **OCR & Menu Parsing**: [Google Gemini 2.5 Flash](https://deepmind.google/technologies/gemini/) via `google-genai` SDK
-- **Image Generation**: [Google Imagen 4 Fast](https://deepmind.google/technologies/imagen/) via `google-genai` SDK
+- **OCR & Menu Parsing**: [Google Gemini 3.6 Flash](https://deepmind.google/technologies/gemini/) via `google-genai` SDK
+- **Image Generation**: [Google Gemini 3.1 Flash Image](https://deepmind.google/technologies/gemini/) via `google-genai` SDK
 - **Language**: Python 3.8+
 
 > **Note**: This project uses a single API provider (Google) for both OCR and image generation, so only one API key is needed.
@@ -59,7 +63,7 @@ Navigate to `http://localhost:8501` in your browser.
 
 1. **Upload/Input**: Choose to upload a menu image or paste menu text
 2. **Extract**: Gemini reads the menu, structures each item, and generates tags for it
-3. **Generate**: Imagen 4 Fast generates a photo for each dish, concurrently
+3. **Generate**: Gemini 3.1 Flash Image generates a photo for each dish, concurrently
 4. **Display**: the menu renders as a responsive grid of dishes and photos
 5. **Search**: the search bar filters dishes by name, description, ingredients, or tags
 

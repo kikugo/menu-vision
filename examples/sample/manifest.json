@@ -1,0 +1,202 @@
+{
+ "restaurant_style": "casual modern American grill with warm inviting pub styling",
+ "items": [
+  {
+   "name": "Caesar Salad",
+   "description": "Fresh romaine lettuce, parmesan cheese, croutons with house caesar dressing",
+   "price": "$12.99",
+   "ingredients": [
+    "romaine lettuce",
+    "parmesan cheese",
+    "croutons",
+    "caesar dressing"
+   ],
+   "tags": [
+    "savory",
+    "fresh",
+    "salad",
+    "vegetarian",
+    "american"
+   ],
+   "prompt": "Professional food photography of a Caesar Salad. Crisp green romaine lettuce leaves tossed with golden-brown garlic croutons, generously shaved parmesan cheese, and creamy house caesar dressing. Beautifully plated in a chilled wooden bowl, shot from a 45-degree angle with soft natural lighting. Garnished with cracked black pepper. Clean, fresh restaurant background. High-resolution, appetizing, and cinematic presentation.",
+   "estimated_calories": 450,
+   "protein_g": 12,
+   "carbs_g": 22,
+   "fat_g": 36,
+   "image": "caesar-salad.jpg"
+  },
+  {
+   "name": "Buffalo Wings",
+   "description": "10 pieces of crispy chicken wings with buffalo sauce and blue cheese dip",
+   "price": "$14.99",
+   "ingredients": [
+    "chicken wings",
+    "buffalo sauce",
+    "blue cheese dip",
+    "celery"
+   ],
+   "tags": [
+    "spicy",
+    "savory",
+    "chicken",
+    "appetizer",
+    "american"
+   ],
+   "prompt": "Professional food photography of Buffalo Wings. Ten crispy, juicy chicken wings tossed in glistening spicy red buffalo sauce. Served on a rustic metal platter alongside a ramekin of creamy blue cheese dip and crisp celery sticks, shot from an overhead close-up angle with moody soft lighting. High-resolution, appetizing texture, and cinematic presentation.",
+   "estimated_calories": 950,
+   "protein_g": 58,
+   "carbs_g": 14,
+   "fat_g": 74,
+   "image": "buffalo-wings.jpg"
+  },
+  {
+   "name": "Mozzarella Sticks",
+   "description": "Breaded mozzarella cheese served with marinara sauce",
+   "price": "$9.99",
+   "ingredients": [
+    "mozzarella cheese",
+    "breadcrumbs",
+    "marinara sauce",
+    "herbs"
+   ],
+   "tags": [
+    "savory",
+    "cheesy",
+    "appetizer",
+    "fried",
+    "italian-american"
+   ],
+   "prompt": "Professional food photography of Mozzarella Sticks. Golden-brown breaded fried mozzarella sticks stacked neatly with melted cheese stretching. Served with a small bowl of rich red marinara sauce, shot from a 45-degree close-up angle under warm studio lighting. Garnished with finely chopped fresh parsley. High-resolution, mouthwatering, and cinematic presentation.",
+   "estimated_calories": 720,
+   "protein_g": 32,
+   "carbs_g": 50,
+   "fat_g": 44,
+   "image": "mozzarella-sticks.jpg"
+  },
+  {
+   "name": "Spinach Artichoke Dip",
+   "description": "Creamy spinach and artichoke dip served with tortilla chips",
+   "price": "$11.99",
+   "ingredients": [
+    "spinach",
+    "artichokes",
+    "cream cheese",
+    "mozzarella",
+    "tortilla chips"
+   ],
+   "tags": [
+    "creamy",
+    "savory",
+    "appetizer",
+    "vegetarian",
+    "american"
+   ],
+   "prompt": "Professional food photography of Spinach Artichoke Dip. Warm, bubbly, melted cheese topped creamy spinach and artichoke dip served in a hot cast-iron skillet, surrounded by crispy golden tortilla chips. Shot from a 45-degree angle with soft natural lighting highlighting the golden browned cheese crust. High-resolution, comforting, and cinematic presentation.",
+   "estimated_calories": 850,
+   "protein_g": 24,
+   "carbs_g": 68,
+   "fat_g": 54,
+   "image": "spinach-artichoke-dip.jpg"
+  },
+  {
+   "name": "Grilled Salmon",
+   "description": "Fresh Atlantic salmon with lemon butter sauce, served with seasonal vegetables",
+   "price": "$24.99",
+   "ingredients": [
+    "Atlantic salmon",
+    "lemon",
+    "butter",
+    "asparagus",
+    "carrots"
+   ],
+   "tags": [
+    "savory",
+    "seafood",
+    "fish",
+    "healthy",
+    "american"
+   ],
+   "prompt": "Professional food photography of Grilled Salmon. Perfectly seared Atlantic salmon fillet with visible grill marks, drizzled with glossy lemon butter sauce. Served alongside colorful roasted seasonal vegetables like asparagus and carrots, plated gracefully on a dark slate dish, shot from a 45-degree angle in bright natural light. Garnished with a lemon wheel and dill sprig. High-resolution, delicious, and cinematic presentation.",
+   "estimated_calories": 680,
+   "protein_g": 46,
+   "carbs_g": 12,
+   "fat_g": 50,
+   "image": "grilled-salmon.jpg"
+  },
+  {
+   "name": "Beef Burger",
+   "description": "Angus beef patty with lettuce, tomato, pickles, and fries on brioche bun",
+   "price": "$16.99",
+   "ingredients": [
+    "Angus beef patty",
+    "brioche bun",
+    "lettuce",
+    "tomato",
+    "pickles",
+    "french fries"
+   ],
+   "tags": [
+    "savory",
+    "beef",
+    "burger",
+    "american",
+    "comfort-food"
+   ],
+   "prompt": "Professional food photography of a Beef Burger. Thick juicy grilled Angus beef patty topped with melted cheddar cheese, crisp lettuce, ripe red tomato slices, and pickles inside a shiny toasted brioche bun. Served next to a pile of golden crispy french fries on a wooden board, shot from an eye-level close-up angle with studio lighting. High-resolution, appetizing, and cinematic presentation.",
+   "estimated_calories": 1100,
+   "protein_g": 52,
+   "carbs_g": 85,
+   "fat_g": 62,
+   "image": "beef-burger.jpg"
+  },
+  {
+   "name": "Chicken Alfredo",
+   "description": "Grilled chicken breast over fettuccine pasta in creamy alfredo sauce",
+   "price": "$18.99",
+   "ingredients": [
+    "chicken breast",
+    "fettuccine pasta",
+    "heavy cream",
+    "parmesan cheese",
+    "garlic"
+   ],
+   "tags": [
+    "creamy",
+    "savory",
+    "pasta",
+    "chicken",
+    "italian"
+   ],
+   "prompt": "Professional food photography of Chicken Alfredo. Tender sliced grilled chicken breast arranged over a bed of fettuccine pasta coated in rich, velvety parmesan alfredo sauce. Served in a shallow white ceramic bowl, shot from a 45-degree angle with soft warm light. Garnished with fresh chopped parsley and freshly ground black pepper. High-resolution, rich, and cinematic presentation.",
+   "estimated_calories": 1250,
+   "protein_g": 65,
+   "carbs_g": 90,
+   "fat_g": 68,
+   "image": "chicken-alfredo.jpg"
+  },
+  {
+   "name": "Margherita Pizza",
+   "description": "Traditional pizza with fresh mozzarella, tomatoes, and basil",
+   "price": "$15.99",
+   "ingredients": [
+    "pizza dough",
+    "tomato sauce",
+    "fresh mozzarella",
+    "fresh basil",
+    "olive oil"
+   ],
+   "tags": [
+    "savory",
+    "pizza",
+    "vegetarian",
+    "italian"
+   ],
+   "prompt": "Professional food photography of Margherita Pizza. Neapolitan-style pizza with charred crust bubbles, bright red tomato sauce, melted rounds of fresh mozzarella, and vibrant green basil leaves. Shot from an overhead flat-lay angle on a rustic wooden pizza peel with natural light. High-resolution, artisan, and cinematic presentation.",
+   "estimated_calories": 980,
+   "protein_g": 38,
+   "carbs_g": 115,
+   "fat_g": 40,
+   "image": "margherita-pizza.jpg"
+  }
+ ]
+}

@@ -1,6 +1,8 @@
 import streamlit as st
 import io
+import json
 import os
+from pathlib import Path
 from collections import Counter
 from PIL import Image
 from dotenv import load_dotenv
@@ -31,8 +33,8 @@ def initialize_ui():
     st.markdown("""
     Turns a restaurant menu into a set of dish photos.
 
-    Upload a photo of the menu or paste the text. Gemini 2.5 Flash reads each dish,
-    then Imagen 4 Fast generates an image for it.
+    Upload a photo of the menu or paste the text. Gemini 3.6 Flash reads each dish,
+    then Gemini 3.1 Flash Image generates a photo for it.
     """)
     
     st.divider()
@@ -179,6 +181,40 @@ def _get_top_tags(menu_items, max_tags=6):
     # Get the most common tags, title-cased
     tag_counts = Counter(tag.lower() for tag in all_tags)
     return [tag.title() for tag, _ in tag_counts.most_common(max_tags)]
+
+SAMPLE_DIR = Path(__file__).parent / "examples" / "sample"
+
+
+def _display_sample_menu():
+    """Show a menu generated earlier, before the visitor uploads anything.
+
+    The images are committed, so the common visit costs no API calls at all.
+    Labelled as a sample on purpose: presenting cached output as a live result
+    would be dishonest, and the caption is how a visitor knows the difference.
+    """
+    manifest_path = SAMPLE_DIR / "manifest.json"
+    if not manifest_path.exists():
+        return
+
+    payload = json.loads(manifest_path.read_text())
+    items = []
+    for entry in payload.get("items", []):
+        image_path = SAMPLE_DIR / entry.get("image", "")
+        if not image_path.exists():
+            continue
+        item = dict(entry)
+        item["image_bytes"] = image_path.read_bytes()
+        items.append(item)
+
+    if not items:
+        return
+
+    st.caption(
+        "Example menu, generated earlier and saved. Upload a menu or paste text "
+        "above to generate new images."
+    )
+    display_menu_grid(items)
+
 
 def display_menu_grid(menu_items_with_images):
     """Display menu items in a responsive grid layout."""
@@ -496,6 +532,9 @@ def main():
                     progress_bar.empty()
                 else:
                     st.warning("Please enter some menu text first.")
+
+    if "visual_menu" not in st.session_state:
+        _display_sample_menu()
 
     if "visual_menu" in st.session_state:
         display_menu_grid(st.session_state.visual_menu)
