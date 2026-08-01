@@ -1,5 +1,6 @@
 import hashlib
 import os
+import time
 from pathlib import Path
 from google import genai
 from google.genai import types
@@ -9,6 +10,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # Imagen 4 Fast allows 70 images per day on this tier, so regenerating a dish
 # that was already drawn is the most expensive mistake this file can make.
 CACHE_DIR = Path('.menu_vision_cache')
+
+MAX_ATTEMPTS = 3
+RETRY_SLEEP_SECONDS = 6  # 10 RPM means one request every six seconds
 
 
 def cache_key(prompt: str, style: str = "") -> str:
@@ -34,6 +38,19 @@ def _get_client():
     if not api_key:
         raise ValueError("Google API Key not found. Please set the GOOGLE_API_KEY environment variable.")
     return genai.Client(api_key=api_key)
+
+
+def _call_imagen(client, prompt: str):
+    """Isolated so tests can stub the network call and the retry wrapper can
+    catch failures around a single, well-defined boundary."""
+    return client.models.generate_images(
+        model='imagen-4.0-fast-generate-001',
+        prompt=prompt,
+        config=types.GenerateImagesConfig(
+            number_of_images=1,
+            aspect_ratio='1:1',
+        )
+    )
 
 
 def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Optional[Dict[str, Any]]:
@@ -70,27 +87,31 @@ def generate_image(menu_item: Dict[str, Any], restaurant_style: str = "") -> Opt
 
         print(f"🎨 Generating image for: {menu_item.get('name', 'Unknown')}")
 
-        # Generate image using Imagen 4 Fast
-        response = client.models.generate_images(
-            model='imagen-4.0-fast-generate-001',
-            prompt=prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                aspect_ratio='1:1',
-            )
-        )
+        # A 429 is expected behaviour at this quota, not an error worth
+        # crashing over, so retry with backoff before giving up on the dish.
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            try:
+                response = _call_imagen(client, prompt)
 
-        if response.generated_images:
-            image_bytes = response.generated_images[0].image.image_bytes
-            store_image(key, image_bytes)
+                if response.generated_images:
+                    image_bytes = response.generated_images[0].image.image_bytes
+                    store_image(key, image_bytes)
 
-            # Return the menu item with image data
-            result = menu_item.copy()
-            result['image_bytes'] = image_bytes
-            print(f"✅ Successfully generated image for: {menu_item.get('name', 'Unknown')}")
-            return result
+                    # Return the menu item with image data
+                    result = menu_item.copy()
+                    result['image_bytes'] = image_bytes
+                    print(f"✅ Successfully generated image for: {menu_item.get('name', 'Unknown')}")
+                    return result
 
-        print(f"❌ Failed to generate image for: {menu_item.get('name', 'Unknown')}")
+                print(f"❌ Failed to generate image for: {menu_item.get('name', 'Unknown')}")
+                return None
+
+            except Exception as e:
+                print(f"❌ Attempt {attempt}/{MAX_ATTEMPTS} failed for {menu_item.get('name', 'Unknown')}: {e}")
+                if attempt < MAX_ATTEMPTS:
+                    time.sleep(RETRY_SLEEP_SECONDS * attempt)
+
+        print(f"❌ Giving up on: {menu_item.get('name', 'Unknown')} after {MAX_ATTEMPTS} attempts")
         return None
 
     except Exception as e:
@@ -120,8 +141,9 @@ def generate_images_for_menu(menu_items: list, restaurant_style: str = "", on_pr
     successful_results = []
     completed = 0
 
-    # Use ThreadPoolExecutor for concurrent generation
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    # 3 workers, not 5: at 10 requests per minute, more concurrency than that
+    # just bursts into 429s instead of finishing any faster.
+    with ThreadPoolExecutor(max_workers=3) as executor:
         # Submit all tasks, passing restaurant_style to each
         future_to_item = {
             executor.submit(generate_image, item, restaurant_style): item

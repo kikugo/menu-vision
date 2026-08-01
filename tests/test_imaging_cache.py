@@ -1,4 +1,27 @@
-from src.imaging import cache_key, cached_image, store_image
+from src.imaging import cache_key, cached_image, store_image, generate_image
+
+
+def _fake_imagen_response(image_bytes):
+    class _Image:
+        def __init__(self, data):
+            self.image_bytes = data
+
+    class _GeneratedImage:
+        def __init__(self, data):
+            self.image = _Image(data)
+
+    class _Response:
+        def __init__(self, data):
+            self.generated_images = [_GeneratedImage(data)]
+
+    return _Response(image_bytes)
+
+
+def _stub_client(monkeypatch):
+    """generate_image builds a client before it ever calls Imagen, so a test that
+    only stubs _call_imagen dies on the missing API key and never reaches the
+    retry loop it means to exercise."""
+    monkeypatch.setattr("src.imaging._get_client", lambda: object())
 
 
 def test_cache_key_is_stable_for_same_inputs():
@@ -20,3 +43,41 @@ def test_store_then_read_round_trips(tmp_path, monkeypatch):
 def test_cached_image_returns_none_for_unknown_key(tmp_path, monkeypatch):
     monkeypatch.setattr("src.imaging.CACHE_DIR", tmp_path)
     assert cached_image("nonexistent") is None
+
+
+def test_generate_image_retries_then_succeeds(monkeypatch, tmp_path):
+    monkeypatch.setattr("src.imaging.CACHE_DIR", tmp_path)
+    _stub_client(monkeypatch)
+    calls = {"n": 0}
+
+    def flaky(*args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise RuntimeError("429 RESOURCE_EXHAUSTED")
+        return _fake_imagen_response(b"png")
+
+    monkeypatch.setattr("src.imaging._call_imagen", flaky)
+    monkeypatch.setattr("src.imaging.RETRY_SLEEP_SECONDS", 0)
+
+    result = generate_image({"name": "soup", "prompt": "a bowl of soup"})
+
+    assert calls["n"] == 3
+    assert result["image_bytes"] == b"png"
+
+
+def test_generate_image_gives_up_after_max_attempts(monkeypatch, tmp_path):
+    monkeypatch.setattr("src.imaging.CACHE_DIR", tmp_path)
+    _stub_client(monkeypatch)
+    attempts = {"n": 0}
+
+    def always_fails(*args, **kwargs):
+        attempts["n"] += 1
+        raise RuntimeError("429 RESOURCE_EXHAUSTED")
+
+    monkeypatch.setattr("src.imaging._call_imagen", always_fails)
+    monkeypatch.setattr("src.imaging.RETRY_SLEEP_SECONDS", 0)
+
+    assert generate_image({"name": "soup", "prompt": "a bowl of soup"}) is None
+    # without this the test also passes when the client blows up and Imagen is
+    # never called at all, which is not what it is meant to prove
+    assert attempts["n"] == 3
